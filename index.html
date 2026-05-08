@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="theme-color" content="#d4af37"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="TradeLog"/>
+<title>Trade Journal</title>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0e0e12;--gold:#d4af37;
+  --text:#e8e0d0;--muted:#8a8a9a;--dim:#555;
+  --green:#4ade80;--red:#f87171;
+  --card:rgba(255,255,255,0.03);--border:rgba(255,255,255,0.07);
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Georgia',serif;overscroll-behavior:none}
+body{background-image:radial-gradient(ellipse at 20% 0%,rgba(212,175,55,0.04) 0%,transparent 60%)}
+#app{display:flex;flex-direction:column;height:100%}
+header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;gap:10px}
+.logo{font-family:'Playfair Display',serif;font-size:20px;color:var(--gold)}
+.tagline{font-size:10px;color:var(--dim);font-family:monospace;margin-top:2px}
+.header-btns{display:flex;gap:6px;flex-wrap:wrap}
+.hbtn{padding:7px 14px;border-radius:7px;font-size:12px;cursor:pointer;font-family:monospace;border:1px solid var(--border);background:rgba(255,255,255,0.05);color:var(--muted);transition:all .15s}
+.hbtn.active{background:var(--gold);color:#0e0e12;border-color:var(--gold);font-weight:700}
+main{flex:1;overflow-y:auto;padding:20px;max-width:880px;width:100%;margin:0 auto}
+
+/* Form */
+.form-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.form-tabs{display:flex;border-bottom:1px solid var(--border)}
+.ftab{flex:1;padding:13px;font-size:13px;cursor:pointer;font-family:monospace;background:transparent;color:var(--dim);border:none;border-bottom:2px solid transparent;transition:all .15s}
+.ftab.active{color:var(--gold);background:rgba(212,175,55,0.08);border-bottom-color:var(--gold)}
+.form-body{padding:22px}
+.field{margin-bottom:16px}
+.lbl{display:block;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;font-family:monospace}
+input[type=text],input[type=number],input[type=date],select,textarea{
+  width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);
+  border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;
+  font-family:'JetBrains Mono',monospace;outline:none;transition:border-color .15s
+}
+input:focus,select:focus,textarea:focus{border-color:rgba(212,175,55,0.4)}
+select option{background:#1a1a22}
+textarea{resize:vertical;min-height:80px;line-height:1.6}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.g3a{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px}
+.btn{padding:10px 18px;border-radius:8px;font-size:13px;cursor:pointer;font-family:monospace;transition:all .15s;border:none}
+.btn-gold{background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.25);color:var(--gold)}
+.btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.1);color:var(--dim)}
+.btn-primary{background:var(--gold);color:#0e0e12;font-weight:700;font-family:'JetBrains Mono',monospace;flex:1}
+.btn-primary:disabled{background:rgba(212,175,55,0.2);color:var(--dim);cursor:not-allowed}
+.btn-row{display:flex;gap:10px;margin-top:16px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:5px 13px;border-radius:6px;font-size:12px;cursor:pointer;font-family:monospace;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--muted);transition:all .15s}
+.chip.active{background:rgba(212,175,55,0.15);border-color:var(--gold);color:var(--gold)}
+.setup-hint{font-size:10px;color:var(--dim);font-family:monospace;margin-top:6px}
+.mood-row{display:flex;gap:8px;margin-bottom:5px;flex-wrap:wrap}
+.moodbtn{font-size:22px;background:rgba(255,255,255,0.04);border:1.5px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;transition:all .15s;filter:grayscale(.5)}
+.moodbtn.active{background:rgba(212,175,55,0.15);border-color:var(--gold);filter:none}
+.mood-lbl{font-size:11px;color:var(--gold);font-family:monospace;margin-bottom:12px}
+input[type=range]{width:100%;accent-color:var(--gold)}
+.conf-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-family:monospace;margin-bottom:5px}
+.conf-val{color:var(--gold)}
+.etag{padding:4px 12px;border-radius:20px;font-size:12px;cursor:pointer;font-family:'JetBrains Mono',monospace;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--muted);transition:all .15s}
+.etag.active{background:rgba(212,175,55,0.18);border-color:var(--gold);color:var(--gold)}
+.pnl-line{display:flex;align-items:center;gap:8px;margin-top:8px;min-height:28px}
+.pnl-lbl{font-size:12px;color:var(--dim);font-family:monospace}
+
+/* Drop zone */
+.drop-zone{border:2px dashed rgba(255,255,255,0.12);border-radius:10px;padding:26px 16px;text-align:center;cursor:pointer;background:rgba(255,255,255,0.02);transition:all .2s}
+.drop-zone.drag{border-color:var(--gold);background:rgba(212,175,55,0.06)}
+.thumb-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.thumb{position:relative;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);cursor:zoom-in;flex-shrink:0}
+.thumb img{width:120px;height:76px;object-fit:cover;display:block}
+.thumb-name{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.75));padding:14px 5px 4px;font-size:9px;color:#bbb;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.thumb-del{position:absolute;top:3px;right:3px;width:20px;height:20px;background:rgba(0,0,0,0.8);border:none;border-radius:50%;color:var(--red);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
+
+/* Stats */
+.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:13px 15px}
+.stat-lbl{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;font-family:monospace}
+.stat-val{font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:700}
+
+/* Session banner */
+.session-banner{background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.15);border-radius:10px;padding:10px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.session-info{font-family:monospace;font-size:12px;color:var(--gold)}
+.session-sub{font-size:10px;color:var(--dim);margin-top:2px;font-family:monospace}
+
+/* Day divider */
+.day-divider{display:flex;align-items:center;gap:10px;margin:14px 0 8px}
+.day-label{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--gold);white-space:nowrap;padding:3px 10px;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.2);border-radius:20px}
+.day-line{flex:1;height:1px;background:var(--border)}
+.day-date{font-size:10px;color:var(--dim);font-family:monospace;white-space:nowrap}
+
+/* Trade cards */
+.trade-card{background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:10px;overflow:hidden}
+.trade-row{display:flex;align-items:center;gap:10px;padding:12px 15px;cursor:pointer;flex-wrap:wrap}
+.trade-ticker{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:var(--text);min-width:65px}
+.dir-badge{font-size:11px;padding:2px 8px;border-radius:4px;font-family:monospace;font-weight:600}
+.dir-long{background:rgba(74,222,128,0.1);color:var(--green);border:1px solid rgba(74,222,128,0.2)}
+.dir-short{background:rgba(248,113,113,0.1);color:var(--red);border:1px solid rgba(248,113,113,0.2)}
+.setup-badge{font-size:11px;color:var(--dim);font-family:monospace;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.trade-row-right{margin-left:auto;display:flex;gap:10px;align-items:center;flex-shrink:0}
+.pnl-badge{display:inline-block;padding:2px 10px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700}
+.pnl-pos{background:rgba(74,222,128,0.12);color:var(--green);border:1px solid rgba(74,222,128,0.25)}
+.pnl-neg{background:rgba(248,113,113,0.12);color:var(--red);border:1px solid rgba(248,113,113,0.25)}
+.trade-date{font-size:10px;color:var(--dim);font-family:monospace}
+.chevron{color:var(--dim);font-size:12px;transition:transform .2s}
+.chevron.open{transform:rotate(180deg)}
+.trade-detail{border-top:1px solid var(--border);padding:16px}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:14px}
+.sec-title{font-size:10px;color:var(--gold);text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:10px;font-family:monospace}
+.data-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-family:'JetBrains Mono',monospace;font-size:12px;margin-bottom:10px}
+.data-key{font-size:10px;color:var(--dim)}
+.data-val{color:var(--text);margin-top:2px}
+.notes-text{font-size:12px;color:#9a9a8a;line-height:1.6}
+.mood-display{display:flex;gap:14px;align-items:flex-start;margin-bottom:8px}
+.mood-emoji{font-size:20px}
+.mood-sublbl{font-size:10px;color:var(--muted)}
+.shots-section{border-top:1px solid var(--border);padding-top:14px;margin-top:4px}
+.shots-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+.shot-thumb{position:relative;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);cursor:zoom-in}
+.shot-thumb img{width:180px;height:113px;object-fit:cover;display:block}
+.shot-name{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.75));padding:16px 6px 5px;font-size:10px;color:#ccc;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.etag-display{font-size:11px;padding:2px 8px;border-radius:20px;background:rgba(212,175,55,0.1);color:var(--gold);border:1px solid rgba(212,175,55,0.2)}
+.delete-btn{display:block;margin-top:12px;margin-left:auto;font-size:11px;color:var(--red);background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.2);border-radius:4px;padding:4px 10px;cursor:pointer;font-family:monospace}
+.empty{text-align:center;padding:60px 20px;color:var(--dim)}
+.empty-icon{font-size:40px;margin-bottom:12px}
+.empty-sub{font-size:12px;margin-top:6px}
+.empty-sub span{color:var(--gold)}
+
+/* Draft cards */
+.draft-section-title{font-size:10px;color:#f59e0b;text-transform:uppercase;letter-spacing:.1em;font-family:monospace;font-weight:700;margin-bottom:8px;padding:0 2px}
+.draft-card{background:rgba(245,158,11,0.04);border:1px dashed rgba(245,158,11,0.3);border-left:3px solid #f59e0b;border-radius:10px;margin-bottom:10px;overflow:hidden;cursor:pointer;transition:background .15s}
+.draft-card:hover{background:rgba(245,158,11,0.08)}
+.draft-row{display:flex;align-items:center;gap:10px;padding:12px 15px;flex-wrap:wrap}
+.draft-badge{font-size:10px;padding:2px 8px;border-radius:4px;font-family:monospace;font-weight:700;background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3)}
+.draft-ticker{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:var(--text)}
+.draft-meta{font-size:11px;color:var(--dim);font-family:monospace}
+.draft-actions{margin-left:auto;display:flex;gap:8px;align-items:center}
+.draft-resume{font-size:11px;color:#f59e0b;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);border-radius:5px;padding:4px 10px;cursor:pointer;font-family:monospace}
+.draft-del{font-size:11px;color:var(--red);background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.2);border-radius:5px;padding:4px 10px;cursor:pointer;font-family:monospace}
+
+/* Save draft button */
+.btn-draft{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);color:#f59e0b;font-family:monospace}
+.modal-overlay{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.75);align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal-box{background:#16161e;border:1px solid rgba(212,175,55,0.25);border-radius:16px;padding:28px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto}
+.modal-title{font-family:'Playfair Display',serif;font-size:18px;color:var(--gold);margin-bottom:6px}
+.modal-sub{font-size:11px;color:var(--dim);font-family:monospace;margin-bottom:22px}
+
+/* Lightbox */
+#lightbox{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.93);align-items:center;justify-content:center;cursor:zoom-out}
+#lightbox.open{display:flex}
+#lightbox img{max-width:92vw;max-height:90vh;border-radius:8px;border:1px solid rgba(255,255,255,0.1);cursor:default}
+#lb-close{position:fixed;top:18px;right:22px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:50%;color:#fff;width:36px;height:36px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
+
+/* Toast */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a22;border:1px solid var(--gold);color:var(--gold);padding:10px 20px;border-radius:8px;font-family:monospace;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:2000;white-space:nowrap}
+#toast.show{opacity:1}
+
+@media(max-width:600px){
+  .stats-bar{grid-template-columns:1fr 1fr}
+  .g2{grid-template-columns:1fr}
+  .g3,.g3a{grid-template-columns:1fr 1fr}
+  .detail-grid{grid-template-columns:1fr}
+  .shot-thumb img{width:140px;height:88px}
+  .mood-row{flex-wrap:wrap}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div>
+      <div class="logo">Trade Journal</div>
+      <div class="tagline">technical · emotional · visual</div>
+    </div>
+    <div class="header-btns">
+      <button class="hbtn active" id="btn-journal">📒 Journal</button>
+      <button class="hbtn" id="btn-new">+ New Trade</button>
+      <button class="hbtn" id="btn-export">⬇ Export</button>
+      <button class="hbtn" id="btn-import">⬆ Import</button>
+      <button class="hbtn" id="btn-mt5" style="border-color:rgba(74,222,128,0.3);color:#4ade80">📊 MT5</button>
+      <button class="hbtn" id="btn-scan" style="border-color:rgba(139,92,246,0.4);color:#a78bfa">🤖 Scan Statement</button>
+      <input type="file" id="import-input" accept=".json" style="display:none"/>
+      <input type="file" id="mt5-input" accept=".html,.htm,.csv" style="display:none"/>
+      <input type="file" id="scan-input" accept="image/*,.pdf" style="display:none"/>
+    </div>
+  </header>
+  <main id="main"></main>
+</div>
+
+<!-- AI Statement Scanner Modal -->
+<div class="modal-overlay" id="scan-modal">
+  <div class="modal-box">
+    <div class="modal-title">🤖 AI Statement Scanner</div>
+    <div class="modal-sub">Upload your broker's daily statement image or PDF — AI will extract all trades automatically.</div>
+
+    <div id="scan-drop-zone" style="border:2px dashed rgba(139,92,246,0.3);border-radius:10px;padding:24px;text-align:center;cursor:pointer;background:rgba(139,92,246,0.03);transition:all .2s;margin-bottom:16px">
+      <div style="font-size:28px;margin-bottom:8px">📄</div>
+      <div style="font-size:13px;color:var(--muted);font-family:monospace">Drop statement image/PDF here, or <span style="color:#a78bfa">click to browse</span></div>
+      <div style="font-size:10px;color:var(--dim);margin-top:4px;font-family:monospace">JPG · PNG · PDF — broker daily statement</div>
+    </div>
+
+    <!-- Preview of uploaded image -->
+    <div id="scan-preview-wrap" style="display:none;margin-bottom:14px">
+      <img id="scan-preview-img" style="max-width:100%;max-height:180px;border-radius:8px;border:1px solid var(--border);object-fit:contain"/>
+      <div id="scan-file-name" style="font-size:10px;color:var(--dim);font-family:monospace;margin-top:4px"></div>
+    </div>
+
+    <!-- AI processing state -->
+    <div id="scan-status" style="display:none;text-align:center;padding:20px 0">
+      <div style="font-size:24px;margin-bottom:8px">⏳</div>
+      <div style="font-family:monospace;font-size:13px;color:#a78bfa" id="scan-status-text">Reading statement…</div>
+      <div style="font-size:11px;color:var(--dim);margin-top:4px;font-family:monospace">This takes 5–15 seconds</div>
+    </div>
+
+    <!-- Results preview -->
+    <div id="scan-results" style="display:none">
+      <div style="font-size:11px;color:#a78bfa;font-family:monospace;font-weight:700;margin-bottom:8px" id="scan-results-title"></div>
+      <div style="max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;margin-bottom:10px" id="scan-results-table"></div>
+      <div style="font-size:11px;color:var(--dim);font-family:monospace;margin-bottom:14px" id="scan-results-note"></div>
+    </div>
+
+    <!-- Error state -->
+    <div id="scan-error" style="display:none;background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.2);border-radius:8px;padding:12px;margin-bottom:14px;font-family:monospace;font-size:12px;color:#f87171" id="scan-error-msg"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-ghost" id="scan-cancel">Cancel</button>
+      <button class="btn btn-primary" id="scan-confirm" style="background:#8b5cf6;display:none">Import as Drafts</button>
+    </div>
+  </div>
+</div>
+
+<!-- MT5 Import Modal -->
+<div class="modal-overlay" id="mt5-modal">
+  <div class="modal-box">
+    <div class="modal-title">📊 Import from MT5</div>
+    <div class="modal-sub">Trades land as drafts — add your emotional notes &amp; screenshots after.</div>
+
+    <div style="background:rgba(74,222,128,0.05);border:1px solid rgba(74,222,128,0.2);border-radius:10px;padding:14px;margin-bottom:20px;font-family:monospace;font-size:12px;color:#9a9a8a;line-height:1.8">
+      <div style="color:#4ade80;font-weight:700;margin-bottom:6px">How to export from MT5:</div>
+      1. Open MetaTrader 5<br/>
+      2. Click <strong style="color:var(--text)">View → Terminal</strong> (or press Ctrl+T)<br/>
+      3. Go to the <strong style="color:var(--text)">Account History</strong> tab<br/>
+      4. Right-click → <strong style="color:var(--text)">Report → HTML Report (Detailed)</strong><br/>
+      5. Save the file and upload it below
+    </div>
+
+    <div id="mt5-drop-zone" style="border:2px dashed rgba(74,222,128,0.25);border-radius:10px;padding:24px;text-align:center;cursor:pointer;background:rgba(74,222,128,0.03);transition:all .2s;margin-bottom:16px">
+      <div style="font-size:26px;margin-bottom:6px">📂</div>
+      <div style="font-size:13px;color:var(--muted);font-family:monospace">Drop MT5 report here, or <span style="color:#4ade80">click to browse</span></div>
+      <div style="font-size:10px;color:var(--dim);margin-top:4px;font-family:monospace">HTML or CSV — exported from MT5 Account History</div>
+    </div>
+
+    <div id="mt5-preview" style="display:none">
+      <div style="font-size:11px;color:#4ade80;font-family:monospace;font-weight:700;margin-bottom:8px" id="mt5-preview-title"></div>
+      <div style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;margin-bottom:14px" id="mt5-preview-table"></div>
+      <div style="font-size:11px;color:var(--dim);font-family:monospace;margin-bottom:14px" id="mt5-preview-note"></div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-ghost" id="mt5-cancel">Cancel</button>
+      <button class="btn btn-primary" id="mt5-confirm" style="background:#4ade80;display:none">Import as Drafts</button>
+    </div>
+  </div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal-overlay" id="export-modal">
+  <div class="modal-box">
+    <div class="modal-title">Export Session</div>
+    <div class="modal-sub" id="export-modal-sub">Preparing your journal export…</div>
+    <div class="field">
+      <label class="lbl">Session Name</label>
+      <input type="text" id="export-name" placeholder="e.g. Q2 2026 — May Session"/>
+    </div>
+    <div class="field">
+      <label class="lbl">Final Notes &amp; Insights</label>
+      <textarea id="export-notes" style="min-height:120px" placeholder="Overall performance this period, key lessons learned, patterns noticed, what to improve next session…"></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" id="export-cancel">Cancel</button>
+      <button class="btn btn-primary" id="export-confirm">⬇ Download Backup</button>
+    </div>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div id="lightbox">
+  <button id="lb-close">×</button>
+  <img id="lb-img" src="" alt="Screenshot"/>
+</div>
+<div id="toast"></div>
+
+<script>
+'use strict';
+
+const MOODS       = ['😰','😟','😐','🙂','😄'];
+const MOOD_LABELS = ['Anxious','Uneasy','Neutral','Confident','Euphoric'];
+const SETUPS      = ['Breakout','Pullback','Reversal','Momentum','Support Zone','Resistance Zone','OB Zone','Range','News','Scalp','Other'];
+const EMOTIONS    = ['FOMO','Fear','Greed','Revenge','Disciplined','Uncertain','Calm','Impulsive'];
+
+// ── IndexedDB ──────────────────────────────────────────
+let db;
+function initDB() {
+  return new Promise((res, rej) => {
+    const req = indexedDB.open('TradeJournal', 3); // v3 adds drafts store
+    req.onupgradeneeded = e => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains('trades'))
+        d.createObjectStore('trades', { keyPath: 'id' }).createIndex('date','date');
+      if (!d.objectStoreNames.contains('meta'))
+        d.createObjectStore('meta', { keyPath: 'key' });
+      if (!d.objectStoreNames.contains('drafts'))
+        d.createObjectStore('drafts', { keyPath: 'id' });
+    };
+    req.onsuccess = e => { db = e.target.result; res(); };
+    req.onerror   = () => rej(req.error);
+  });
+}
+const dbGetAll = () => new Promise((res, rej) => {
+  const req = db.transaction('trades','readonly').objectStore('trades').getAll();
+  req.onsuccess = () => res(req.result.sort((a,b) => b.id - a.id));
+  req.onerror   = () => rej(req.error);
+});
+const dbPut = trade => new Promise((res, rej) => {
+  const req = db.transaction('trades','readwrite').objectStore('trades').put(trade);
+  req.onsuccess = () => res(); req.onerror = () => rej(req.error);
+});
+const dbDelete = id => new Promise((res, rej) => {
+  const req = db.transaction('trades','readwrite').objectStore('trades').delete(id);
+  req.onsuccess = () => res(); req.onerror = () => rej(req.error);
+});
+const metaGet = key => new Promise((res) => {
+  const req = db.transaction('meta','readonly').objectStore('meta').get(key);
+  req.onsuccess = () => res(req.result ? req.result.value : null);
+  req.onerror   = () => res(null);
+});
+const metaSet = (key, value) => new Promise((res, rej) => {
+  const req = db.transaction('meta','readwrite').objectStore('meta').put({ key, value });
+  req.onsuccess = () => res(); req.onerror = () => rej(req.error);
+});
+const dbGetDrafts = () => new Promise((res, rej) => {
+  const req = db.transaction('drafts','readonly').objectStore('drafts').getAll();
+  req.onsuccess = () => res(req.result.sort((a,b) => b.savedAt - a.savedAt));
+  req.onerror   = () => rej(req.error);
+});
+const dbPutDraft = draft => new Promise((res, rej) => {
+  const req = db.transaction('drafts','readwrite').objectStore('drafts').put(draft);
+  req.onsuccess = () => res(); req.onerror = () => rej(req.error);
+});
+const dbDeleteDraft = id => new Promise((res, rej) => {
+  const req = db.transaction('drafts','readwrite').objectStore('drafts').delete(id);
+  req.onsuccess = () => res(); req.onerror = () => rej(req.error);
+});
+
+// ── State ──────────────────────────────────────────────
+let trades         = [];
+let drafts         = [];
+let editingDraftId = null; // id of draft being resumed
+let sessionStart   = null; // ISO date string e.g. '2026-05-07'
+let curView        = 'journal';
+let formTab        = 'technical';
+let expandedIds    = new Set();
+let tradeForm      = freshForm();
+
+function freshForm() {
+  return {
+    ticker:'', direction:'Long', entry:'', exit:'', size:'',
+    setups:[], techNotes:'',
+    moodBefore:2, moodAfter:2, confidence:3,
+    emotions:[], emotionNotes:'',
+    date: new Date().toISOString().split('T')[0],
+    screenshots:[]
+  };
+}
+
+// ── Helpers ────────────────────────────────────────────
+function calcPnl(t) {
+  const e = parseFloat(t.entry), x = parseFloat(t.exit), s = parseFloat(t.size);
+  if (!e || !x || !s) return null;
+  return t.direction === 'Long' ? (x-e)*s : (e-x)*s;
+}
+function fmtPnl(p) { return p===null?'—':(p>=0?'+':'')+'$'+p.toFixed(2); }
+function pnlCls(p) { return p===null?'':p>=0?'pnl-pos':'pnl-neg'; }
+function h(s) { return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// Normalise setup: old trades had setup (string), new ones have setups (array)
+function getSetups(t) {
+  if (Array.isArray(t.setups) && t.setups.length) return t.setups;
+  if (t.setup) return [t.setup];
+  return [];
+}
+function fmtSetups(t) {
+  const s = getSetups(t);
+  return s.length ? s.join(' + ') : '—';
+}
+
+// Day number: ordinal rank of trade date among unique dates since session start
+function calcDayNumber(tradeDate, allTrades) {
+  const dates = [...new Set(allTrades.map(t => t.date))].sort();
+  const idx   = dates.indexOf(tradeDate);
+  return idx === -1 ? dates.length + 1 : idx + 1;
+}
+
+let _toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
+}
+function openLightbox(src) {
+  document.getElementById('lb-img').src = src;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.getElementById('lb-img').src = '';
+}
+function compressImage(file) {
+  return new Promise(res => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ratio = Math.min(1, 1400/img.width);
+        canvas.width = Math.round(img.width*ratio);
+        canvas.height = Math.round(img.height*ratio);
+        canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+        res({ dataUrl: canvas.toDataURL('image/jpeg',0.82), name: file.name });
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// ── Render ─────────────────────────────────────────────
+function render() {
+  document.getElementById('main').innerHTML =
+    curView === 'journal' ? renderJournal() : renderForm();
+  bindFormEvents();
+  bindCardEvents();
+}
+
+function setView(v) {
+  curView = v;
+  if (v === 'new') { tradeForm = freshForm(); formTab = 'technical'; editingDraftId = null; }
+  document.getElementById('btn-journal').classList.toggle('active', v==='journal');
+  document.getElementById('btn-new').classList.toggle('active', v==='new');
+  render();
+}
+function setFormTab(tab) { formTab = tab; render(); }
+
+// ── Journal ────────────────────────────────────────────
+function renderJournal() {
+  if (!trades.length) return `
+    <div class="empty">
+      <div class="empty-icon">📒</div>
+      <div style="font-family:monospace;font-size:13px">No trades logged yet.</div>
+      <div class="empty-sub">Hit <span>+ New Trade</span> to start your journal.</div>
+    </div>`;
+
+  // Group trades by date, sorted newest first
+  const byDate = {};
+  trades.forEach(t => { if (!byDate[t.date]) byDate[t.date] = []; byDate[t.date].push(t); });
+  const sortedDates = Object.keys(byDate).sort((a,b) => b.localeCompare(a));
+
+  // Unique dates ascending for day numbering
+  const datesAsc = [...sortedDates].reverse();
+
+  let html = renderStats();
+
+  // Drafts section
+  if (drafts.length) {
+    html += `<div class="draft-section-title">✏️ Drafts (${drafts.length})</div>`;
+    drafts.forEach(d => { html += renderDraftCard(d); });
+    html += `<div style="height:6px"></div>`;
+  }
+
+  // Session banner
+  const totalDays = datesAsc.length;
+  const startLabel = sessionStart
+    ? `Session started ${sessionStart}`
+    : `Session started ${datesAsc[0]||'—'}`;
+  html += `<div class="session-banner">
+    <div>
+      <div class="session-info">📅 Current Session — ${totalDays} trading day${totalDays!==1?'s':''}</div>
+      <div class="session-sub">${startLabel} · Export to close &amp; start fresh</div>
+    </div>
+  </div>`;
+
+  sortedDates.forEach(date => {
+    const dayNum  = datesAsc.indexOf(date) + 1;
+    const dayTrades = byDate[date];
+    const fmt = new Date(date + 'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+    html += `<div class="day-divider">
+      <div class="day-label">Day ${dayNum}</div>
+      <div class="day-line"></div>
+      <div class="day-date">${h(fmt)}</div>
+    </div>`;
+    dayTrades.forEach(t => { html += renderCard(t, dayNum); });
+  });
+
+  return html;
+}
+
+function renderDraftCard(d) {
+  const saved    = new Date(d.savedAt);
+  const timeStr  = saved.toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  const setupStr = Array.isArray(d.setups) && d.setups.length ? d.setups.join(' + ') : (d.setup || '—');
+  const missing  = [];
+  if (!d.exit)  missing.push('exit price');
+  if (!d.entry) missing.push('entry price');
+  const missingLabel = missing.length ? `Missing: ${missing.join(', ')}` : 'Ready to log';
+  return `<div class="draft-card" data-draft-id="${d.id}">
+    <div class="draft-row">
+      <span class="draft-badge">DRAFT</span>
+      <div>
+        <div class="draft-ticker">${h(d.ticker||'Untitled')}</div>
+        <div class="draft-meta">${h(d.direction)} · ${h(setupStr)} · ${h(missingLabel)}</div>
+        <div class="draft-meta" style="margin-top:2px">Saved ${h(timeStr)}</div>
+      </div>
+      <div class="draft-actions">
+        <button class="draft-resume" data-resume-id="${d.id}">Resume →</button>
+        <button class="draft-del"    data-draft-del-id="${d.id}">✕</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderStats() {
+  const pnls  = trades.map(calcPnl).filter(p => p!==null);
+  const wins  = pnls.filter(p => p>0).length;
+  const total = pnls.reduce((a,b) => a+b, 0);
+  const wr    = pnls.length ? Math.round(wins/pnls.length*100) : null;
+  const avg   = trades.reduce((a,t) => a+(t.moodAfter??2), 0) / trades.length;
+  const mi    = Math.min(4, Math.max(0, Math.round(avg)));
+  return `<div class="stats-bar">
+    <div class="stat-card"><div class="stat-lbl">Total Trades</div><div class="stat-val" style="color:var(--text)">${trades.length}</div></div>
+    <div class="stat-card"><div class="stat-lbl">Win Rate</div><div class="stat-val" style="color:${wr===null?'var(--dim)':wr>=50?'var(--green)':'var(--red)'}">${wr!==null?wr+'%':'—'}</div></div>
+    <div class="stat-card"><div class="stat-lbl">Total P&amp;L</div><div class="stat-val" style="color:${total>=0?'var(--green)':'var(--red)'}">${pnls.length?(total>=0?'+':'')+'$'+total.toFixed(2):'—'}</div></div>
+    <div class="stat-card"><div class="stat-lbl">Avg Mood</div><div class="stat-val" style="color:var(--gold)">${MOODS[mi]} ${avg.toFixed(1)}</div></div>
+  </div>`;
+}
+
+function renderCard(t, dayNum) {
+  const p        = calcPnl(t);
+  const bdr      = p===null?'#555':p>=0?'#4ade80':'#f87171';
+  const isOpen   = expandedIds.has(t.id);
+  const shots    = t.screenshots||[];
+  const shotBadge = shots.length ? `<span style="font-size:11px;color:var(--dim)">📸 ${shots.length}</span>` : '';
+  const pnlBadge  = p!==null ? `<span class="pnl-badge ${pnlCls(p)}">${h(fmtPnl(p))}</span>` : '';
+  const setupStr  = h(fmtSetups(t));
+
+  let detail = '';
+  if (isOpen) {
+    const etags    = (t.emotions||[]).map(e=>`<span class="etag-display">${h(e)}</span>`).join(' ');
+    const setupTags = getSetups(t).map(s=>`<span class="etag-display" style="background:rgba(255,255,255,0.05);color:var(--muted);border-color:rgba(255,255,255,0.1)">${h(s)}</span>`).join(' ');
+    const shotRows  = shots.map((s,i) =>
+      `<div class="shot-thumb" data-shot-id="${t.id}" data-shot-idx="${i}">
+        <img src="${h(s.dataUrl)}" loading="lazy"/>
+        <div class="shot-name">${h(s.name)}</div>
+      </div>`).join('');
+    detail = `<div class="trade-detail">
+      <div class="detail-grid">
+        <div>
+          <div class="sec-title">📊 Technical — Day ${dayNum}</div>
+          <div class="data-grid">
+            <div><div class="data-key">Entry</div><div class="data-val">${h(t.entry||'—')}</div></div>
+            <div><div class="data-key">Exit</div><div class="data-val">${h(t.exit||'—')}</div></div>
+            <div><div class="data-key">Size</div><div class="data-val">${h(t.size||'—')}</div></div>
+            <div><div class="data-key">P&amp;L</div><div class="data-val">${h(fmtPnl(p))}</div></div>
+          </div>
+          <div style="margin-bottom:8px">${setupTags||'<span style="font-size:12px;color:var(--dim)">No setup tagged</span>'}</div>
+          ${t.techNotes?`<div class="notes-text">${h(t.techNotes)}</div>`:''}
+        </div>
+        <div>
+          <div class="sec-title">🧠 Emotional</div>
+          <div class="mood-display">
+            <div><div class="data-key">Before</div><div class="mood-emoji">${MOODS[t.moodBefore??2]}</div><div class="mood-sublbl">${MOOD_LABELS[t.moodBefore??2]}</div></div>
+            <div style="align-self:center;color:var(--dim);margin-top:4px">→</div>
+            <div><div class="data-key">After</div><div class="mood-emoji">${MOODS[t.moodAfter??2]}</div><div class="mood-sublbl">${MOOD_LABELS[t.moodAfter??2]}</div></div>
+            <div style="margin-left:auto"><div class="data-key">Confidence</div><div style="font-family:monospace;font-size:18px;color:var(--gold)">${t.confidence??3}/5</div></div>
+          </div>
+          ${etags?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">${etags}</div>`:''}
+          ${t.emotionNotes?`<div class="notes-text">${h(t.emotionNotes)}</div>`:''}
+        </div>
+      </div>
+      ${shots.length?`<div class="shots-section"><div class="sec-title">📸 Screenshots (${shots.length})</div><div class="shots-grid">${shotRows}</div></div>`:''}
+      <button class="delete-btn" data-delete-id="${t.id}">Delete entry</button>
+    </div>`;
+  }
+
+  return `<div class="trade-card" style="border-left:3px solid ${bdr}">
+    <div class="trade-row" data-toggle-id="${t.id}">
+      <div class="trade-ticker">${h(t.ticker)}</div>
+      <span class="dir-badge ${t.direction==='Long'?'dir-long':'dir-short'}">${h(t.direction)}</span>
+      <span class="setup-badge" title="${setupStr}">${setupStr}</span>
+      ${shotBadge}
+      <div class="trade-row-right">
+        ${pnlBadge}
+        <span style="font-size:18px">${MOODS[t.moodAfter??2]}</span>
+        <span class="chevron ${isOpen?'open':''}">▼</span>
+      </div>
+    </div>
+    ${detail}
+  </div>`;
+}
+
+// ── Form ───────────────────────────────────────────────
+function renderForm() {
+  const sc = tradeForm.screenshots.length;
+  return `<div class="form-wrap">
+    <div class="form-tabs">
+      <button class="ftab ${formTab==='technical'?'active':''}" data-tab="technical">📊 Technical</button>
+      <button class="ftab ${formTab==='emotional'?'active':''}" data-tab="emotional">🧠 Emotional</button>
+      <button class="ftab ${formTab==='screenshots'?'active':''}" data-tab="screenshots">📸 Screenshots${sc?' ('+sc+')':''}</button>
+    </div>
+    <div class="form-body">
+      ${formTab==='technical'   ? renderTechForm()        : ''}
+      ${formTab==='emotional'   ? renderEmotionalForm()   : ''}
+      ${formTab==='screenshots' ? renderScreenshotsForm() : ''}
+    </div>
+  </div>`;
+}
+
+function renderTechForm() {
+  const setupChips = SETUPS.map(s =>
+    `<button class="chip setup-chip ${tradeForm.setups.includes(s)?'active':''}" data-setup="${h(s)}">${h(s)}</button>`
+  ).join('');
+  const selectedLabel = tradeForm.setups.length
+    ? `Selected: <span style="color:var(--gold)">${tradeForm.setups.join(' + ')}</span>`
+    : 'Tap to select one or more setups';
+  return `
+    <div class="g3a field">
+      <div><label class="lbl">Ticker *</label><input id="f-ticker" type="text" placeholder="AAPL" autocomplete="off" autocapitalize="characters"/></div>
+      <div><label class="lbl">Direction</label>
+        <select id="f-dir">
+          <option value="Long"  ${tradeForm.direction==='Long' ?'selected':''}>Long</option>
+          <option value="Short" ${tradeForm.direction==='Short'?'selected':''}>Short</option>
+        </select>
+      </div>
+      <div><label class="lbl">Date</label><input id="f-date" type="date"/></div>
+    </div>
+    <div class="g3 field">
+      <div><label class="lbl">Entry Price</label><input id="f-entry" type="number" step="any" placeholder="0.00"/></div>
+      <div><label class="lbl">Exit Price</label><input id="f-exit"  type="number" step="any" placeholder="0.00"/></div>
+      <div><label class="lbl">Size / Shares</label><input id="f-size" type="number" step="any" placeholder="100"/></div>
+    </div>
+    <div class="pnl-line" id="pnl-line"></div>
+    <div class="field" style="margin-top:14px">
+      <label class="lbl">Setup Type <span style="color:var(--dim);font-size:9px;text-transform:none;letter-spacing:0">(multi-select)</span></label>
+      <div class="chips">${setupChips}</div>
+      <div class="setup-hint">${selectedLabel}</div>
+    </div>
+    <div class="field">
+      <label class="lbl">Technical Notes</label>
+      <textarea id="f-tech-notes" placeholder="Entry reason, key levels, patterns, mistakes…"></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-draft" id="draft-tech">Save Draft</button>
+      <button class="btn btn-gold" style="flex:1" id="tech-next">Next: Emotional Log →</button>
+    </div>`;
+}
+
+function renderEmotionalForm() {
+  const moodPicker = (field, label) => {
+    const cur = tradeForm[field];
+    const btns = MOODS.map((m,i) =>
+      `<button class="moodbtn ${cur===i?'active':''}" data-mood-field="${field}" data-mood-val="${i}">${m}</button>`
+    ).join('');
+    return `<div>
+      <label class="lbl">${label}</label>
+      <div class="mood-row">${btns}</div>
+      <div class="mood-lbl">${MOOD_LABELS[cur]}</div>
+    </div>`;
+  };
+  const etags = EMOTIONS.map(e =>
+    `<button class="chip etag ${tradeForm.emotions.includes(e)?'active':''}" data-emotion="${h(e)}">${h(e)}</button>`
+  ).join('');
+  return `
+    <div class="g2 field">
+      ${moodPicker('moodBefore','Mood Before Trade')}
+      ${moodPicker('moodAfter','Mood After Trade')}
+    </div>
+    <div class="field">
+      <div class="conf-lbl">Confidence — <span class="conf-val" id="conf-display">${tradeForm.confidence}/5</span></div>
+      <input id="f-confidence" type="range" min="1" max="5" value="${tradeForm.confidence}"/>
+    </div>
+    <div class="field">
+      <label class="lbl">Emotions Present</label>
+      <div class="chips">${etags}</div>
+    </div>
+    <div class="field">
+      <label class="lbl">Emotional Notes</label>
+      <textarea id="f-emotion-notes" placeholder="How were you feeling? Did emotions affect decisions?" style="min-height:90px"></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" id="emo-back">← Back</button>
+      <button class="btn btn-draft" id="draft-emo">Save Draft</button>
+      <button class="btn btn-gold" style="flex:1" id="emo-next">Next: Screenshots →</button>
+    </div>`;
+}
+
+function renderScreenshotsForm() {
+  const thumbs = tradeForm.screenshots.map((s,i) =>
+    `<div class="thumb form-thumb" data-form-shot="${i}">
+      <img src="${h(s.dataUrl)}" loading="lazy"/>
+      <div class="thumb-name">${h(s.name)}</div>
+      <button class="thumb-del form-shot-del" data-del-shot="${i}">×</button>
+    </div>`).join('');
+  const hint = tradeForm.screenshots.length
+    ? `<div style="font-size:11px;color:var(--dim);font-family:monospace;margin-top:10px">${tradeForm.screenshots.length} screenshot${tradeForm.screenshots.length>1?'s':''} — click to preview · × to remove</div>`
+    : '';
+  return `
+    <div class="drop-zone" id="drop-zone">
+      <div style="font-size:28px;margin-bottom:8px">📸</div>
+      <div style="font-size:13px;color:var(--muted);font-family:monospace">Drop chart screenshots here, or <span style="color:var(--gold)">click to browse</span></div>
+      <div style="font-size:10px;color:var(--dim);margin-top:5px;font-family:monospace">PNG · JPG · WEBP — multiple files allowed</div>
+    </div>
+    <input type="file" id="shot-input" accept="image/*" multiple style="display:none"/>
+    ${hint}
+    <div class="thumb-grid">${thumbs}</div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" id="shot-back">← Back</button>
+      <button class="btn btn-draft" id="draft-shot">Save Draft</button>
+      <button class="btn btn-primary" id="save-trade" ${!tradeForm.ticker?'disabled':''}>
+        Log Trade${tradeForm.screenshots.length?' + '+tradeForm.screenshots.length+' screenshot'+(tradeForm.screenshots.length>1?'s':''):''}
+      </button>
+    </div>`;
+}
+
+// ── Event binding ──────────────────────────────────────
+function bindFormEvents() {
+  if (curView !== 'new') return;
+
+  document.querySelectorAll('[data-tab]').forEach(btn =>
+    btn.addEventListener('click', () => setFormTab(btn.dataset.tab))
+  );
+
+  if (formTab === 'technical') {
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+    set('f-ticker',     tradeForm.ticker);
+    set('f-dir',        tradeForm.direction);
+    set('f-date',       tradeForm.date);
+    set('f-entry',      tradeForm.entry);
+    set('f-exit',       tradeForm.exit);
+    set('f-size',       tradeForm.size);
+    set('f-tech-notes', tradeForm.techNotes);
+
+    const refreshPnl = () => {
+      const p  = calcPnl(tradeForm);
+      const el = document.getElementById('pnl-line');
+      if (!el) return;
+      el.innerHTML = p!==null
+        ? `<span class="pnl-lbl">Calculated P&L:</span><span class="pnl-badge ${pnlCls(p)}">${h(fmtPnl(p))}</span>`
+        : '';
+    };
+    refreshPnl();
+
+    const wire = (id, field) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener('input', () => {
+        let val = el.value;
+        if (field === 'ticker') { val = val.toUpperCase(); el.value = val; }
+        tradeForm[field] = val;
+        refreshPnl();
+      });
+    };
+    wire('f-ticker','ticker'); wire('f-entry','entry');
+    wire('f-exit','exit');     wire('f-size','size');
+    wire('f-tech-notes','techNotes');
+
+    const dirEl = document.getElementById('f-dir');
+    if (dirEl) dirEl.addEventListener('change', () => { tradeForm.direction = dirEl.value; });
+    const dateEl = document.getElementById('f-date');
+    if (dateEl) dateEl.addEventListener('change', () => { tradeForm.date = dateEl.value; });
+
+    // Multi-select setup chips
+    document.querySelectorAll('.setup-chip').forEach(chip =>
+      chip.addEventListener('click', () => {
+        const s = chip.dataset.setup;
+        tradeForm.setups = tradeForm.setups.includes(s)
+          ? tradeForm.setups.filter(x => x !== s)
+          : [...tradeForm.setups, s];
+        render();
+      })
+    );
+    const tn = document.getElementById('tech-next');
+    if (tn) tn.addEventListener('click', () => setFormTab('emotional'));
+    const dt = document.getElementById('draft-tech');
+    if (dt) dt.addEventListener('click', saveDraft);
+  }
+
+  if (formTab === 'emotional') {
+    const notesEl = document.getElementById('f-emotion-notes');
+    if (notesEl) { notesEl.value = tradeForm.emotionNotes; notesEl.addEventListener('input', () => { tradeForm.emotionNotes = notesEl.value; }); }
+    const confEl = document.getElementById('f-confidence');
+    if (confEl) confEl.addEventListener('input', () => {
+      tradeForm.confidence = +confEl.value;
+      const d = document.getElementById('conf-display');
+      if (d) d.textContent = confEl.value + '/5';
+    });
+    document.querySelectorAll('[data-mood-field]').forEach(btn =>
+      btn.addEventListener('click', () => { tradeForm[btn.dataset.moodField] = +btn.dataset.moodVal; render(); })
+    );
+    document.querySelectorAll('[data-emotion]').forEach(btn =>
+      btn.addEventListener('click', () => {
+        const e = btn.dataset.emotion;
+        tradeForm.emotions = tradeForm.emotions.includes(e)
+          ? tradeForm.emotions.filter(x => x!==e) : [...tradeForm.emotions, e];
+        render();
+      })
+    );
+    const eb = document.getElementById('emo-back'); if (eb) eb.addEventListener('click', () => setFormTab('technical'));
+    const en = document.getElementById('emo-next'); if (en) en.addEventListener('click', () => setFormTab('screenshots'));
+    const de = document.getElementById('draft-emo'); if (de) de.addEventListener('click', saveDraft);
+  }
+
+  if (formTab === 'screenshots') {
+    const dz = document.getElementById('drop-zone');
+    const si = document.getElementById('shot-input');
+    if (dz && si) {
+      dz.addEventListener('click', () => si.click());
+      dz.addEventListener('dragenter', e => { e.preventDefault(); dz.classList.add('drag'); });
+      dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+      dz.addEventListener('dragover',  e => e.preventDefault());
+      dz.addEventListener('drop', async e => { e.preventDefault(); dz.classList.remove('drag'); await addShots(e.dataTransfer.files); });
+      si.addEventListener('change', async () => { await addShots(si.files); si.value=''; });
+    }
+    document.querySelectorAll('.form-thumb').forEach(thumb =>
+      thumb.addEventListener('click', e => {
+        if (e.target.closest('.form-shot-del')) return;
+        openLightbox(tradeForm.screenshots[+thumb.dataset.formShot].dataUrl);
+      })
+    );
+    document.querySelectorAll('.form-shot-del').forEach(btn =>
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        tradeForm.screenshots = tradeForm.screenshots.filter((_,i) => i !== +btn.dataset.delShot);
+        render();
+      })
+    );
+    const sb = document.getElementById('shot-back'); if (sb) sb.addEventListener('click', () => setFormTab('emotional'));
+    const sv = document.getElementById('save-trade'); if (sv) sv.addEventListener('click', saveTrade);
+    const ds = document.getElementById('draft-shot'); if (ds) ds.addEventListener('click', saveDraft);
+  }
+}
+
+function bindCardEvents() {
+  if (curView !== 'journal') return;
+  document.querySelectorAll('[data-toggle-id]').forEach(row =>
+    row.addEventListener('click', () => {
+      const id = +row.dataset.toggleId;
+      expandedIds.has(id) ? expandedIds.delete(id) : expandedIds.add(id);
+      render();
+    })
+  );
+  document.querySelectorAll('[data-delete-id]').forEach(btn =>
+    btn.addEventListener('click', async e => {
+      e.stopPropagation();
+      if (!confirm('Delete this trade entry?')) return;
+      const id = +btn.dataset.deleteId;
+      await dbDelete(id);
+      expandedIds.delete(id);
+      trades = await dbGetAll();
+      render();
+      toast('Entry deleted');
+    })
+  );
+  document.querySelectorAll('[data-resume-id]').forEach(btn =>
+    btn.addEventListener('click', e => { e.stopPropagation(); resumeDraft(+btn.dataset.resumeId); })
+  );
+  document.querySelectorAll('[data-draft-del-id]').forEach(btn =>
+    btn.addEventListener('click', async e => {
+      e.stopPropagation();
+      if (!confirm('Delete this draft?')) return;
+      await dbDeleteDraft(+btn.dataset.draftDelId);
+      drafts = await dbGetDrafts();
+      render();
+      toast('Draft deleted');
+    })
+  );
+  // clicking draft card row also resumes
+  document.querySelectorAll('[data-draft-id]').forEach(card =>
+    card.addEventListener('click', e => {
+      if (e.target.closest('button')) return;
+      resumeDraft(+card.dataset.draftId);
+    })
+  );
+  document.querySelectorAll('[data-shot-id]').forEach(thumb =>
+    thumb.addEventListener('click', () => {
+      const t = trades.find(x => x.id === +thumb.dataset.shotId);
+      if (t && t.screenshots) openLightbox(t.screenshots[+thumb.dataset.shotIdx].dataUrl);
+    })
+  );
+}
+
+// ── Actions ────────────────────────────────────────────
+async function saveDraft() {
+  if (!tradeForm.ticker && !tradeForm.entry) { toast('Add at least a ticker to save draft'); return; }
+  const id   = editingDraftId || Date.now();
+  const draft = { ...tradeForm, id, savedAt: Date.now(), isDraft: true };
+  await dbPutDraft(draft);
+  drafts = await dbGetDrafts();
+  editingDraftId = null;
+  setView('journal');
+  toast('📝 Draft saved — tap to resume anytime');
+}
+
+function resumeDraft(id) {
+  const draft = drafts.find(d => d.id === id);
+  if (!draft) return;
+  editingDraftId = draft.id;
+  tradeForm = {
+    ticker:       draft.ticker      || '',
+    direction:    draft.direction   || 'Long',
+    entry:        draft.entry       || '',
+    exit:         draft.exit        || '',
+    size:         draft.size        || '',
+    setups:       draft.setups      || (draft.setup ? [draft.setup] : []),
+    techNotes:    draft.techNotes   || '',
+    moodBefore:   draft.moodBefore  ?? 2,
+    moodAfter:    draft.moodAfter   ?? 2,
+    confidence:   draft.confidence  ?? 3,
+    emotions:     draft.emotions    || [],
+    emotionNotes: draft.emotionNotes|| '',
+    date:         draft.date        || new Date().toISOString().split('T')[0],
+    screenshots:  draft.screenshots || [],
+  };
+  formTab = 'technical';
+  curView = 'new';
+  document.getElementById('btn-journal').classList.remove('active');
+  document.getElementById('btn-new').classList.add('active');
+  render();
+}
+
+async function addShots(files) {
+  const imgs = Array.from(files).filter(f => f.type.startsWith('image/'));
+  if (!imgs.length) return;
+  const compressed = await Promise.all(imgs.map(compressImage));
+  tradeForm.screenshots = [...tradeForm.screenshots, ...compressed];
+  render();
+}
+
+async function saveTrade() {
+  if (!tradeForm.ticker) return;
+  const btn = document.getElementById('save-trade');
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+
+  if (!sessionStart) {
+    sessionStart = tradeForm.date;
+    await metaSet('sessionStart', sessionStart);
+  }
+
+  await dbPut({ ...tradeForm, id: editingDraftId || Date.now() });
+
+  // Remove draft if we were editing one
+  if (editingDraftId) {
+    await dbDeleteDraft(editingDraftId);
+    editingDraftId = null;
+    drafts = await dbGetDrafts();
+  }
+
+  trades = await dbGetAll();
+  tradeForm = freshForm();
+  setView('journal');
+  toast('✓ Trade logged');
+}
+
+// ── Export modal ───────────────────────────────────────
+function openExportModal() {
+  const all = trades;
+  if (!all.length) { toast('No trades to export yet'); return; }
+
+  const datesAsc = [...new Set(all.map(t=>t.date))].sort();
+  const totalDays = datesAsc.length;
+  const sub = document.getElementById('export-modal-sub');
+  sub.textContent = `${all.length} trade${all.length!==1?'s':''} across ${totalDays} trading day${totalDays!==1?'s':''} · ${datesAsc[0]||''} → ${datesAsc[datesAsc.length-1]||''}`;
+
+  // Pre-fill name
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('export-name').value = `Trade Journal — ${today}`;
+  document.getElementById('export-notes').value = '';
+  document.getElementById('export-modal').classList.add('open');
+}
+
+async function doExport() {
+  const name  = document.getElementById('export-name').value.trim() || `Trade Journal — ${new Date().toISOString().split('T')[0]}`;
+  const notes = document.getElementById('export-notes').value.trim();
+  const all   = await dbGetAll();
+
+  // Assign day numbers for the export
+  const datesAsc = [...new Set(all.map(t=>t.date))].sort();
+  const tradesWithDays = all.map(t => ({
+    ...t,
+    dayNumber: datesAsc.indexOf(t.date) + 1
+  }));
+
+  const payload = {
+    version: 2,
+    sessionName: name,
+    finalNotes: notes,
+    exportedAt: new Date().toISOString(),
+    sessionStart: sessionStart || datesAsc[0] || null,
+    totalDays: datesAsc.length,
+    tradeCount: all.length,
+    trades: tradesWithDays
+  };
+
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
+  const safeName = name.replace(/[^a-z0-9\-_ ]/gi,'_').replace(/\s+/g,'-').toLowerCase();
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(blob),
+    download: `${safeName}.json`
+  });
+  a.click();
+  URL.revokeObjectURL(a.href);
+
+  // Reset session after export
+  sessionStart = new Date().toISOString().split('T')[0];
+  await metaSet('sessionStart', sessionStart);
+
+  document.getElementById('export-modal').classList.remove('open');
+  toast(`✓ Exported "${name}"`);
+}
+
+// ── Import ─────────────────────────────────────────────
+async function importBackup(file) {
+  if (!file) return;
+  let payload;
+  try { payload = JSON.parse(await file.text()); } catch { toast('❌ Invalid backup file'); return; }
+  const incoming = Array.isArray(payload) ? payload : payload.trades;
+  if (!Array.isArray(incoming)||!incoming.length) { toast('❌ No trades found in file'); return; }
+  const existingIds = new Set((await dbGetAll()).map(t => t.id));
+  let added=0, skipped=0;
+  for (const t of incoming) {
+    if (!t.id||!t.ticker) { skipped++; continue; }
+    if (existingIds.has(t.id)) { skipped++; continue; }
+    await dbPut(t); added++;
+  }
+  trades = await dbGetAll();
+  // If no session start yet, set it from oldest trade
+  if (!sessionStart && trades.length) {
+    const oldest = [...trades].sort((a,b) => a.id-b.id)[0];
+    sessionStart = oldest.date;
+    await metaSet('sessionStart', sessionStart);
+  }
+  render();
+  toast(skipped
+    ? `✓ Imported ${added} trade${added!==1?'s':''} (${skipped} skipped)`
+    : `✓ Imported ${added} trade${added!==1?'s':''}`);
+}
+
+// ── Static bindings ────────────────────────────────────
+document.getElementById('btn-scan').addEventListener('click', openScanModal);
+document.getElementById('scan-input').addEventListener('change', function() {
+  if (this.files[0]) { handleScanFile(this.files[0]); this.value=''; }
+});
+document.getElementById('scan-cancel').addEventListener('click',  () => document.getElementById('scan-modal').classList.remove('open'));
+document.getElementById('scan-confirm').addEventListener('click', confirmScanImport);
+document.getElementById('scan-modal').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('open');
+});
+document.getElementById('scan-drop-zone').addEventListener('click', () => document.getElementById('scan-input').click());
+document.getElementById('scan-drop-zone').addEventListener('dragover', e => e.preventDefault());
+document.getElementById('scan-drop-zone').addEventListener('drop', e => {
+  e.preventDefault();
+  if (e.dataTransfer.files[0]) handleScanFile(e.dataTransfer.files[0]);
+});
+document.getElementById('btn-mt5').addEventListener('click', openMT5Modal);
+document.getElementById('mt5-input').addEventListener('change', function() {
+  if (this.files[0]) { handleMT5File(this.files[0]); this.value=''; }
+});
+document.getElementById('mt5-cancel').addEventListener('click',  () => document.getElementById('mt5-modal').classList.remove('open'));
+document.getElementById('mt5-confirm').addEventListener('click', confirmMT5Import);
+document.getElementById('mt5-modal').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('open');
+});
+document.getElementById('mt5-drop-zone').addEventListener('click', () => document.getElementById('mt5-input').click());
+document.getElementById('mt5-drop-zone').addEventListener('dragover',  e => e.preventDefault());
+document.getElementById('mt5-drop-zone').addEventListener('drop', e => {
+  e.preventDefault();
+  if (e.dataTransfer.files[0]) handleMT5File(e.dataTransfer.files[0]);
+});
+document.getElementById('btn-journal').addEventListener('click', () => setView('journal'));
+document.getElementById('btn-new').addEventListener('click',     () => setView('new'));
+document.getElementById('btn-export').addEventListener('click',  openExportModal);
+document.getElementById('btn-import').addEventListener('click',  () => document.getElementById('import-input').click());
+document.getElementById('import-input').addEventListener('change', function() {
+  if (this.files[0]) { importBackup(this.files[0]); this.value=''; }
+});
+
+// Export modal buttons
+document.getElementById('export-cancel').addEventListener('click',  () => document.getElementById('export-modal').classList.remove('open'));
+document.getElementById('export-confirm').addEventListener('click', doExport);
+document.getElementById('export-modal').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('open'); // close on backdrop click
+});
+
+// Lightbox
+document.getElementById('lightbox').addEventListener('click', closeLightbox);
+document.getElementById('lb-close').addEventListener('click', e => { e.stopPropagation(); closeLightbox(); });
+document.addEventListener('keydown', e => { if (e.key==='Escape') { closeLightbox(); document.getElementById('export-modal').classList.remove('open'); } });
+
+// ── AI Statement Scanner ───────────────────────────────
+let scanParsed = [];
+
+function openScanModal() {
+  scanParsed = [];
+  document.getElementById('scan-drop-zone').style.display = 'block';
+  document.getElementById('scan-preview-wrap').style.display = 'none';
+  document.getElementById('scan-status').style.display = 'none';
+  document.getElementById('scan-results').style.display = 'none';
+  document.getElementById('scan-error').style.display = 'none';
+  document.getElementById('scan-confirm').style.display = 'none';
+  document.getElementById('scan-modal').classList.add('open');
+}
+
+async function handleScanFile(file) {
+  if (!file) return;
+
+  // Show preview
+  const wrap = document.getElementById('scan-preview-wrap');
+  const img  = document.getElementById('scan-preview-img');
+  const name = document.getElementById('scan-file-name');
+  name.textContent = file.name;
+
+  if (file.type.startsWith('image/')) {
+    const url = URL.createObjectURL(file);
+    img.src = url;
+    wrap.style.display = 'block';
+  } else {
+    img.src = '';
+    wrap.style.display = 'none';
+  }
+
+  // Hide other states
+  document.getElementById('scan-results').style.display = 'none';
+  document.getElementById('scan-error').style.display   = 'none';
+  document.getElementById('scan-confirm').style.display = 'none';
+  document.getElementById('scan-drop-zone').style.display = 'none';
+
+  // Show processing
+  const status = document.getElementById('scan-status');
+  status.style.display = 'block';
+  document.getElementById('scan-status-text').textContent = 'Reading statement…';
+
+  try {
+    const base64 = await fileToBase64(file);
+    const isPDF  = file.type === 'application/pdf';
+
+    document.getElementById('scan-status-text').textContent = 'Extracting trade data with AI…';
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1500,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: isPDF ? 'document' : 'image',
+              source: { type: 'base64', media_type: file.type, data: base64 }
+            },
+            {
+              type: 'text',
+              text: `This is a broker trading statement. Extract all completed/closed trades and return ONLY a JSON array with no other text, no markdown, no explanation.
+
+Each trade object must have these exact keys:
+- ticker: string (symbol/instrument, e.g. "EURUSD", "XAUUSD", "BTCUSD")
+- direction: "Long" or "Short" (buy=Long, sell=Short)
+- entry: string (open/entry price as number string)
+- exit: string (close/exit price as number string, empty string if trade still open)
+- size: string (volume/lots/quantity as number string)
+- date: string (open date in YYYY-MM-DD format)
+- profit: string (profit/loss as number string with sign, e.g. "-12.50" or "34.20")
+
+If a trade is still open (no exit price), include it with exit as empty string "".
+If you cannot find any trades, return an empty array [].
+Return ONLY the JSON array, nothing else.`
+            }
+          ]
+        }]
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error?.message || 'API error');
+    }
+
+    const data    = await response.json();
+    const content = data.content.map(c => c.text || '').join('').trim();
+
+    // Strip any accidental markdown
+    const clean = content.replace(/```json|```/g, '').trim();
+    const trades = JSON.parse(clean);
+
+    if (!Array.isArray(trades)) throw new Error('Unexpected response format');
+
+    status.style.display = 'none';
+
+    if (!trades.length) {
+      showScanError('No trades found in this statement. Make sure the image shows completed trade entries.');
+      return;
+    }
+
+    scanParsed = trades.map(t => ({
+      ticker:      String(t.ticker||'').toUpperCase(),
+      direction:   t.direction === 'Short' ? 'Short' : 'Long',
+      entry:       String(t.entry||''),
+      exit:        String(t.exit||''),
+      size:        String(t.size||''),
+      date:        String(t.date||new Date().toISOString().split('T')[0]),
+      setups:[], emotions:[], screenshots:[],
+      techNotes:   `Scanned from broker statement${t.profit ? ' · P&L: '+t.profit : ''}`,
+      moodBefore:2, moodAfter:2, confidence:3, emotionNotes:'',
+    }));
+
+    showScanResults(scanParsed);
+
+  } catch(err) {
+    document.getElementById('scan-status').style.display = 'none';
+    showScanError('Could not read statement: ' + err.message + '. Try a clearer image with better lighting.');
+  }
+}
+
+function showScanError(msg) {
+  const el = document.getElementById('scan-error');
+  el.textContent = '⚠ ' + msg;
+  el.style.display = 'block';
+  document.getElementById('scan-drop-zone').style.display = 'block';
+}
+
+function showScanResults(trades) {
+  const wrap  = document.getElementById('scan-results');
+  const title = document.getElementById('scan-results-title');
+  const tbl   = document.getElementById('scan-results-table');
+  const note  = document.getElementById('scan-results-note');
+  const btn   = document.getElementById('scan-confirm');
+
+  title.textContent = `✓ Found ${trades.length} trade${trades.length!==1?'s':''}`;
+
+  const rows = trades.slice(0,10).map(t =>
+    `<tr>
+      <td style="padding:7px 10px;font-family:monospace;font-size:11px;color:var(--text)">${h(t.ticker)}</td>
+      <td style="padding:7px 10px;font-family:monospace;font-size:11px;color:${t.direction==='Long'?'#4ade80':'#f87171'}">${h(t.direction)}</td>
+      <td style="padding:7px 10px;font-family:monospace;font-size:11px;color:var(--muted)">${h(t.entry)}</td>
+      <td style="padding:7px 10px;font-family:monospace;font-size:11px;color:var(--muted)">${h(t.exit||'—')}</td>
+      <td style="padding:7px 10px;font-family:monospace;font-size:11px;color:var(--dim)">${h(t.date)}</td>
+    </tr>`
+  ).join('');
+
+  tbl.innerHTML = `<table style="width:100%;border-collapse:collapse">
+    <tr style="background:rgba(255,255,255,0.03)">
+      <th style="padding:6px 10px;font-size:10px;color:var(--dim);font-family:monospace;text-align:left;font-weight:normal">Symbol</th>
+      <th style="padding:6px 10px;font-size:10px;color:var(--dim);font-family:monospace;text-align:left;font-weight:normal">Dir</th>
+      <th style="padding:6px 10px;font-size:10px;color:var(--dim);font-family:monospace;text-align:left;font-weight:normal">Entry</th>
+      <th style="padding:6px 10px;font-size:10px;color:var(--dim);font-family:monospace;text-align:left;font-weight:normal">Exit</th>
+      <th style="padding:6px 10px;font-size:10px;color:var(--dim);font-family:monospace;text-align:left;font-weight:normal">Date</th>
+    </tr>
+    ${rows}
+    ${trades.length>10?`<tr><td colspan="5" style="padding:7px 10px;font-size:11px;color:var(--dim);font-family:monospace">…and ${trades.length-10} more</td></tr>`:''}
+  </table>`;
+
+  note.textContent = `Trades import as drafts. Open each one to verify the data, add emotional notes and screenshots.`;
+  wrap.style.display = 'block';
+  btn.style.display  = 'block';
+}
+
+async function confirmScanImport() {
+  if (!scanParsed.length) return;
+  const btn = document.getElementById('scan-confirm');
+  btn.textContent = 'Importing…'; btn.disabled = true;
+
+  let added = 0;
+  for (const t of scanParsed) {
+    await dbPutDraft({ ...t, id: Date.now() + added, savedAt: Date.now(), isDraft: true });
+    added++;
+    await new Promise(r => setTimeout(r, 2));
+  }
+
+  drafts = await dbGetDrafts();
+  document.getElementById('scan-modal').classList.remove('open');
+  scanParsed = [];
+  setView('journal');
+  toast(`✓ Imported ${added} trade${added!==1?'s':''} from statement — add your notes to each`);
+}
+
+function fileToBase64(file) {
+  return new Promise((res, rej) => {
+    const reader = new FileReader();
+    reader.onload  = e => res(e.target.result.split(',')[1]);
+    reader.onerror = () => rej(new Error('File read failed'));
+    reader.readAsDataURL(file);
+  });
+}
+
+// ── MT5 Import ─────────────────────────────────────────
+let mt5Parsed = []; // holds parsed trades pending confirmation
+
+function openMT5Modal() {
+  mt5Parsed = [];
+  document.getElementById('mt5-preview').style.display = 'none';
+  document.getElementById('mt5-confirm').style.display = 'none';
+  document.getElementById('mt5-drop-zone').style.borderColor = 'rgba(74,222,128,0.25)';
+  document.getElementById('mt5-modal').classList.add('open');
+}
+
+async function handleMT5File(file) {
+  if (!file) return;
+  const ext  = file.name.split('.').pop().toLowerCase();
+  const text = await file.text();
+  try {
+    mt5Parsed = ext === 'csv' ? parseMT5CSV(text) : parseMT5HTML(text);
+  } catch(e) {
+    toast('❌ Could not parse MT5 file — try exporting as HTML Detailed Report');
+    return;
+  }
+  if (!mt5Parsed.length) {
+    toast('❌ No closed trades found in file');
+    return;
+  }
+  showMT5Preview(mt5Parsed);
+}
+
+function parseMT5HTML(html) {
+  const parser = new DOMParser();
+  const doc    = parser.parseFromString(html, 'text/html');
+  const tables = Array.from(doc.querySelectorAll('table'));
+  if (!tables.length) throw new Error('No tables');
+
+  // Find the table most likely to be trade history (most rows, has price-like data)
+  let best = null, bestScore = 0;
+  for (const tbl of tables) {
+    const rows = tbl.querySelectorAll('tr');
+    if (rows.length < 2) continue;
+    const text = tbl.textContent.toLowerCase();
+    let score = rows.length;
+    if (text.includes('symbol') || text.includes('item'))  score += 50;
+    if (text.includes('profit') || text.includes('p&l'))   score += 50;
+    if (text.includes('buy') || text.includes('sell'))     score += 30;
+    if (score > bestScore) { bestScore = score; best = tbl; }
+  }
+  if (!best) throw new Error('No suitable table');
+
+  // Extract headers from first row that looks like a header
+  const rows = Array.from(best.querySelectorAll('tr'));
+  let headerRow = null, headerIdx = 0;
+  for (let i = 0; i < Math.min(5, rows.length); i++) {
+    const cells = rows[i].querySelectorAll('th,td');
+    const txt   = Array.from(cells).map(c => c.textContent.trim().toLowerCase()).join(' ');
+    if (txt.includes('symbol') || txt.includes('item') || txt.includes('type')) {
+      headerRow = Array.from(cells).map(c => c.textContent.trim().toLowerCase());
+      headerIdx = i;
+      break;
+    }
+  }
+  if (!headerRow) throw new Error('No header row');
+
+  // Column index map
+  const col = name => {
+    const aliases = {
+      symbol:    ['symbol','item','instrument','pair'],
+      type:      ['type','direction','side'],
+      volume:    ['volume','lots','size','qty','quantity'],
+      openPrice: ['open price','price','open','entry','entry price'],
+      closePrice:['close price','close','exit','exit price','price.1'],
+      openTime:  ['open time','time','open','date','entry time'],
+      closeTime: ['close time','close','exit time','close date'],
+      profit:    ['profit','p&l','pnl','net p&l','net profit'],
+      sl:        ['s/l','sl','stop loss','stoploss'],
+      tp:        ['t/p','tp','take profit','takeprofit'],
+    };
+    const keys = aliases[name] || [name];
+    for (const k of keys) {
+      const idx = headerRow.findIndex(h => h.includes(k));
+      if (idx !== -1) return idx;
+    }
+    return -1;
+  };
+
+  const symIdx   = col('symbol');
+  const typeIdx  = col('type');
+  const volIdx   = col('volume');
+  const opIdx    = col('openPrice');
+  const cpIdx    = col('closePrice');
+  const otIdx    = col('openTime');
+  const profIdx  = col('profit');
+
+  const trades = [];
+  for (let i = headerIdx + 1; i < rows.length; i++) {
+    const cells = Array.from(rows[i].querySelectorAll('td'));
+    if (cells.length < 3) continue;
+    const get = idx => idx >= 0 && idx < cells.length ? cells[idx].textContent.trim() : '';
+
+    const sym     = get(symIdx);
+    const typeRaw = get(typeIdx).toLowerCase();
+    const vol     = get(volIdx);
+    const op      = get(opIdx);
+    const cp      = get(cpIdx);
+    const ot      = get(otIdx);
+    const profit  = get(profIdx);
+
+    // Skip non-trade rows (balance, deposit, header duplicates, empty)
+    if (!sym || sym.toLowerCase() === 'symbol' || sym.toLowerCase() === 'item') continue;
+    if (typeRaw.includes('balance') || typeRaw.includes('deposit') || typeRaw.includes('withdrawal')) continue;
+    if (!typeRaw.includes('buy') && !typeRaw.includes('sell')) continue;
+
+    // Parse date
+    const dateStr = ot.split(' ')[0] || ot; // "2026.05.08 10:30" → "2026.05.08"
+    const date    = dateStr.replace(/\./g, '-').split('T')[0].substring(0,10);
+
+    trades.push({
+      ticker:    sym.replace(/[^A-Z0-9.]/gi,'').toUpperCase(),
+      direction: typeRaw.includes('buy') ? 'Long' : 'Short',
+      entry:     op.replace(/[^0-9.]/g,''),
+      exit:      cp.replace(/[^0-9.]/g,''),
+      size:      vol.replace(/[^0-9.]/g,''),
+      date:      date || new Date().toISOString().split('T')[0],
+      mt5Profit: profit,
+      setups:    [],
+      emotions:  [],
+      screenshots:[],
+      techNotes: `Imported from MT5${profit ? ' · P&L: '+profit : ''}`,
+      moodBefore:2, moodAfter:2, confidence:3, emotionNotes:'',
+    });
+  }
+  return trades;
+}
+
+function parseMT5CSV(csv) {
+  const lines = csv.split('\n').filter(l => l.trim());
+  if (lines.length < 2) throw new Error('Too few lines');
+
+  const header = lines[0].split(',').map(h => h.trim().replace(/"/g,'').toLowerCase());
+
+  const col = name => {
+    const aliases = {
+      symbol:    ['symbol','item','instrument'],
+      type:      ['type','direction'],
+      volume:    ['volume','lots','size'],
+      openPrice: ['open price','price','open'],
+      closePrice:['close price','close','exit'],
+      openTime:  ['open time','time','date'],
+      profit:    ['profit','p&l','pnl'],
+    };
+    const keys = aliases[name] || [name];
+    for (const k of keys) {
+      const idx = header.findIndex(h => h.includes(k));
+      if (idx !== -1) return idx;
+    }
+    return -1;
+  };
+
+  const symIdx  = col('symbol');
+  const typeIdx = col('type');
+  const volIdx  = col('volume');
+  const opIdx   = col('openPrice');
+  const cpIdx   = col('closePrice');
+  const otIdx   = col('openTime');
+  const profIdx = col('profit');
+
+  const trades = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cells   = lines[i].split(',').map(c => c.trim().replace(/"/g,''));
+    const get     = idx => idx >= 0 && idx < cells.length ? cells[idx] : '';
+    const typeRaw = get(typeIdx).toLowerCase();
+    const sym     = get(symIdx);
+    if (!sym || !typeRaw.includes('buy') && !typeRaw.includes('sell')) continue;
+
+    const dateStr = get(otIdx).split(' ')[0].replace(/\./g,'-').substring(0,10);
+    const profit  = get(profIdx);
+    trades.push({
+      ticker:    sym.toUpperCase(),
+      direction: typeRaw.includes('buy') ? 'Long' : 'Short',
+      entry:     get(opIdx).replace(/[^0-9.]/g,''),
+      exit:      get(cpIdx).replace(/[^0-9.]/g,''),
+      size:      get(volIdx).replace(/[^0-9.]/g,''),
+      date:      dateStr || new Date().toISOString().split('T')[0],
+      mt5Profit: profit,
+      setups:[], emotions:[], screenshots:[],
+      techNotes: `Imported from MT5${profit ? ' · P&L: '+profit : ''}`,
+      moodBefore:2, moodAfter:2, confidence:3, emotionNotes:'',
+    });
+  }
+  return trades;
+}
+
+function showMT5Preview(trades) {
+  const preview = document.getElementById('mt5-preview');
+  const title   = document.getElementById('mt5-preview-title');
+  const tbl     = document.getElementById('mt5-preview-table');
+  const note    = document.getElementById('mt5-preview-note');
+  const btn     = document.getElementById('mt5-confirm');
+
+  title.textContent = `Found ${trades.length} trade${trades.length!==1?'s':''}`;
+
+  const rows = trades.slice(0,10).map(t =>
+    `<tr>
+      <td style="padding:7px 10px;font-family:monospace;font-size:11px;color:var(--text)">${h(t.ticker)}</td>
+      <td style="padding:7px 10px;font-family:monospace;font-size:11px;color:${t.direction==='Long'?'#4ade80':'#f87171'}">${h(t.direction)}</td>
+      <td style="padding:7px 10px;font-family:monospace;font-size:11px;color:var(--muted)">${h(t.entry)}</td>
+      <td style="padding:7px 10px;font-family:monospace;font-size:11px;color:var(--muted)">${h(t.exit||'—')}</td>
+      <td style="padding:7px 10px;font-family:monospace;font-size:11px;color:var(--dim)">${h(t.date)}</td>
+    </tr>`
+  ).join('');
+
+  tbl.innerHTML = `<table style="width:100%;border-collapse:collapse">
+    <tr style="background:rgba(255,255,255,0.03)">
+      <th style="padding:6px 10px;font-size:10px;color:var(--dim);font-family:monospace;text-align:left;font-weight:normal">Symbol</th>
+      <th style="padding:6px 10px;font-size:10px;color:var(--dim);font-family:monospace;text-align:left;font-weight:normal">Dir</th>
+      <th style="padding:6px 10px;font-size:10px;color:var(--dim);font-family:monospace;text-align:left;font-weight:normal">Entry</th>
+      <th style="padding:6px 10px;font-size:10px;color:var(--dim);font-family:monospace;text-align:left;font-weight:normal">Exit</th>
+      <th style="padding:6px 10px;font-size:10px;color:var(--dim);font-family:monospace;text-align:left;font-weight:normal">Date</th>
+    </tr>
+    ${rows}
+    ${trades.length>10?`<tr><td colspan="5" style="padding:7px 10px;font-size:11px;color:var(--dim);font-family:monospace">…and ${trades.length-10} more</td></tr>`:''}
+  </table>`;
+
+  note.textContent = `All ${trades.length} trade${trades.length!==1?'s':''} will be saved as drafts. Open each draft to add your emotional notes and screenshots.`;
+  preview.style.display = 'block';
+  btn.style.display     = 'block';
+  document.getElementById('mt5-drop-zone').style.borderColor = 'rgba(74,222,128,0.5)';
+}
+
+async function confirmMT5Import() {
+  if (!mt5Parsed.length) return;
+  const btn = document.getElementById('mt5-confirm');
+  btn.textContent = 'Importing…'; btn.disabled = true;
+
+  const existingIds = new Set((await dbGetDrafts()).map(d => d.id));
+  let added = 0;
+  for (const t of mt5Parsed) {
+    const id = Date.now() + added; // ensure unique ids
+    if (!existingIds.has(id)) {
+      await dbPutDraft({ ...t, id, savedAt: Date.now(), isDraft: true });
+      added++;
+      await new Promise(r => setTimeout(r, 2)); // tiny delay to ensure unique timestamps
+    }
+  }
+
+  drafts = await dbGetDrafts();
+  document.getElementById('mt5-modal').classList.remove('open');
+  mt5Parsed = [];
+  setView('journal');
+  toast(`✓ Imported ${added} trade${added!==1?'s':''} as drafts — add your notes to each`);
+}
+
+// ── Boot ───────────────────────────────────────────────
+(async () => {
+  await initDB();
+  trades       = await dbGetAll();
+  drafts       = await dbGetDrafts();
+  sessionStart = await metaGet('sessionStart');
+  if (!sessionStart && trades.length) {
+    const oldest = [...trades].sort((a,b) => a.id-b.id)[0];
+    sessionStart = oldest.date;
+    await metaSet('sessionStart', sessionStart);
+  }
+  render();
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+})();
+</script>
+</body>
+</html>
